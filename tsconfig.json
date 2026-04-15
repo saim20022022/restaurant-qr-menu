@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@restaurant/config": ["packages/config/src"],
+      "@restaurant/config/*": ["packages/config/src/*"],
+      "@restaurant/types": ["packages/types/src"],
+      "@restaurant/types/*": ["packages/types/src/*"],
+      "@restaurant/utils": ["packages/utils/src"],
+      "@restaurant/utils/*": ["packages/utils/src/*"],
+      "@restaurant/ui": ["packages/ui/src"],
+      "@restaurant/ui/*": ["packages/ui/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "allowJs": false,
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./*"],
+      "@restaurant/types": ["../../packages/types/src"],
+      "@restaurant/types/*": ["../../packages/types/src/*"],
+      "@restaurant/ui": ["../../packages/ui/src"],
+      "@restaurant/ui/*": ["../../packages/ui/src/*"],
+      "@restaurant/utils": ["../../packages/utils/src"],
+      "@restaurant/utils/*": ["../../packages/utils/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

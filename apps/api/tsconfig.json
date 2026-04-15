@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": true,
+    "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "@restaurant/types": ["../../packages/types/src"],
+      "@restaurant/types/*": ["../../packages/types/src/*"],
+      "@restaurant/utils": ["../../packages/utils/src"],
+      "@restaurant/utils/*": ["../../packages/utils/src/*"],
+      "@restaurant/config": ["../../packages/config/src"],
+      "@restaurant/config/*": ["../../packages/config/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

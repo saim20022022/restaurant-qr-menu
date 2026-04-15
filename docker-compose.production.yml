@@ -1,0 +1,115 @@
+version: "3.9"
+
+name: ${COMPOSE_PROJECT_NAME:-myapp}
+
+services:
+  app:
+    # Eğer image registry kullanıyorsanız build yerine image satırını kullanın:
+    # image: ${APP_IMAGE:-ghcr.io/your-org/your-app:latest}
+    build:
+      context: ${APP_BUILD_CONTEXT:-.}
+      dockerfile: ${APP_DOCKERFILE:-Dockerfile}
+    container_name: ${APP_CONTAINER_NAME:-myapp-app}
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - TZ=${TZ:-Europe/Istanbul}
+      - PORT=${APP_INTERNAL_PORT:-3000}
+    expose:
+      - "${APP_INTERNAL_PORT:-3000}"
+    restart: unless-stopped
+    mem_limit: ${APP_MEM_LIMIT:-1g}
+    cpus: ${APP_CPU_LIMIT:-1.0}
+    pids_limit: 256
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${APP_INTERNAL_PORT:-3000}${APP_HEALTHCHECK_PATH:-/health} || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - app_net
+
+  caddy:
+    image: caddy:2.8
+    container_name: ${APP_CONTAINER_NAME:-myapp}-caddy
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - APP_DOMAIN=${APP_DOMAIN:-localhost}
+      - APP_INTERNAL_PORT=${APP_INTERNAL_PORT:-3000}
+    command: >
+      sh -c 'cat > /etc/caddy/Caddyfile <<EOF
+      ${APP_DOMAIN:-localhost} {
+        encode gzip zstd
+        reverse_proxy app:${APP_INTERNAL_PORT:-3000}
+        header {
+          Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options "nosniff"
+          X-Frame-Options "DENY"
+          Referrer-Policy "strict-origin-when-cross-origin"
+        }
+      }
+      EOF
+      && caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'
+    healthcheck:
+      test: ["CMD", "caddy", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app_net
+
+  # Opsiyonel PostgreSQL servisi
+  # Aktifleştirmek için: POSTGRES_ENABLED=true ve --profile database kullanın.
+  db:
+    image: postgres:16-alpine
+    container_name: ${APP_CONTAINER_NAME:-myapp}-db
+    restart: unless-stopped
+    profiles: ["database"]
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-app}
+      - POSTGRES_USER=${POSTGRES_USER:-app}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set_in_env}
+      - TZ=${TZ:-Europe/Istanbul}
+    mem_limit: ${DB_MEM_LIMIT:-512m}
+    cpus: ${DB_CPU_LIMIT:-0.5}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-app}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_net
+
+volumes:
+  app_logs:
+  caddy_data:
+  caddy_config:
+  db_data:
+
+networks:
+  app_net:
+    driver: bridge
